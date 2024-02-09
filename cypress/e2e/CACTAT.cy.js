@@ -1,6 +1,8 @@
 
 /// <reference types="Cypress" />
 
+const THREESEC = 3000
+
 describe('Central de Atendimento ao Cliente TAT', function() {
     this.beforeEach(function(){
         cy.visit('./src/index.html')
@@ -221,5 +223,70 @@ describe('Central de Atendimento ao Cliente TAT', function() {
         cy.contains('CAC TAT - Política de privacidade').should('be.visible')
     })
 
+    it('exibe a mensagem por três segundos', function(){
+        cy.clock() //congela o tempo
+        cy.contains('button', 'Enviar').click() 
+        cy.contains('Valide os campos obrigatórios!').should('be.visible')
+        cy.tick(THREESEC) //avança o tempo a partir do valir informado
+        cy.contains('Valide os campos obrigatórios!').should('not.be.visible')
+    })
 
-})
+    Cypress._.times(3, function(){ //Repete um teste várias vezes
+      it('Simular ctrl+v para escrever grandes textos', function(){
+        const txtlongo = Cypress._.repeat('Muito trabalho e pouca diversão faz de Jack um bobão', 10)
+        //o Cypress._.repeat repete uma string um numero x de vezes
+        cy.get('#open-text-area').type(txtlongo,{delay: 0})
+      })
+    })
+
+    it('forçar a mensagem de mensagens obrigatórias a aparecer com o .invoke(show)', function(){
+
+      cy.get('.error')
+       .should('not.be.visible')
+       .invoke('show')
+       .should('be.visible')
+       .invoke('hide')
+       .should('not.be.visible')
+
+      cy.get('.success')
+       .should('not.be.visible')
+       .invoke('show')
+       .should('be.visible')
+       .invoke('hide')
+       .should('not.be.visible')
+    })
+
+    it(`preenche a area de texto usando o comando invoke`, function(){
+      const txtlongo = Cypress._.repeat('Muito trabalho e pouca diversão faz de Jack um bobão', 10)
+      cy.get('#open-text-area')
+        .invoke('val', txtlongo)
+        .should('have.value', txtlongo)
+
+    })
+
+    it('faz uma requisição HTTP', function(){
+      cy.request('https://cac-tat.s3.eu-central-1.amazonaws.com/index.html')
+        .should(function(response)  {
+          const {status, statusText, body} = response
+          expect(status).to.equal(200)
+          expect(statusText).to.equal('OK')
+          expect(body).to.include('CAC TAT')
+
+        })
+    })
+
+    it.only('encontrar um gato escosndido', function(){
+      cy.clock()
+      cy.get('#cat')
+        .invoke('show')
+        .contains('🐈')
+        .should('be.visible')
+        .invoke('hide')
+        .should('not.be.visible')
+      cy.get('#title')
+        .invoke('text', "CAT TAT")
+      cy.get('#subtitle')
+        .invoke('text', 'Os gatos mais fodas e fofos desse lado da galáxia 🐱🐱🐱')
+    })
+
+}) 
